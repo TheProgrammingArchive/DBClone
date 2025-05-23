@@ -1,0 +1,47 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define MAX_INPUT_SZ 128
+
+typedef struct{
+    char* buffer;
+    size_t buffer_size;
+} InputBuffer;
+
+InputBuffer* new_buffer(){
+    InputBuffer* buff = (InputBuffer*)malloc(sizeof(InputBuffer));
+    buff->buffer = NULL;
+    buff->buffer_size = 0;
+
+    return buff;
+}
+
+void delete_buffer(InputBuffer* buffer){
+    free(buffer->buffer);
+    free(buffer);
+}
+
+char* read_input(InputBuffer* buffer, size_t inp_max_size){
+    if (buffer->buffer)
+        free(buffer->buffer); buffer->buffer = NULL;
+    buffer->buffer = (char*)malloc(inp_max_size*sizeof(char));
+
+    if (fgets(buffer->buffer, inp_max_size, stdin) != NULL){
+        buffer->buffer[strcspn(buffer->buffer, "\n")] = 0;
+        buffer->buffer_size = strlen(buffer->buffer);
+        return buffer->buffer;
+    }
+    exit(EXIT_FAILURE);
+}
+
+
+int main(){
+    InputBuffer* buffer = new_buffer();
+
+    while (1){
+        read_input(buffer, MAX_INPUT_SZ);
+        printf("%s\n", buffer->buffer);
+    }
+
+    delete_buffer(buffer);
+}
