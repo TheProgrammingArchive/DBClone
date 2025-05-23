@@ -10,6 +10,10 @@ typedef struct{
 
 InputBuffer* new_buffer(){
     InputBuffer* buff = (InputBuffer*)malloc(sizeof(InputBuffer));
+
+    if (!buff)
+        return NULL;
+
     buff->buffer = NULL;
     buff->buffer_size = 0;
 
@@ -22,8 +26,11 @@ void delete_buffer(InputBuffer* buffer){
 }
 
 char* read_input(InputBuffer* buffer, size_t inp_max_size){
-    if (buffer->buffer)
-        free(buffer->buffer); buffer->buffer = NULL;
+    if (buffer->buffer){
+        free(buffer->buffer); 
+        buffer->buffer = NULL;
+    }
+
     buffer->buffer = (char*)malloc(inp_max_size*sizeof(char));
 
     if (fgets(buffer->buffer, inp_max_size, stdin) != NULL){
@@ -31,17 +38,29 @@ char* read_input(InputBuffer* buffer, size_t inp_max_size){
         buffer->buffer_size = strlen(buffer->buffer);
         return buffer->buffer;
     }
-    exit(EXIT_FAILURE);
+    
+    return NULL;
 }
 
 
 int main(){
     InputBuffer* buffer = new_buffer();
 
-    while (1){
-        read_input(buffer, MAX_INPUT_SZ);
-        printf("%s\n", buffer->buffer);
-    }
+    if (!buffer)
+        exit(EXIT_FAILURE);
 
-    delete_buffer(buffer);
+    while (1){
+        if (!read_input(buffer, MAX_INPUT_SZ)){
+            delete_buffer(buffer);
+            exit(EXIT_FAILURE);
+        }
+        else{
+
+
+            if (strcmp(buffer->buffer, ".quit") == 0){
+                delete_buffer(buffer);
+                exit(EXIT_SUCCESS);
+            }
+        }
+    }
 }
