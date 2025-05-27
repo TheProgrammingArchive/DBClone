@@ -59,7 +59,7 @@ void deserialize_row(Row* dest, void* src){
         memcpy(&(dest->columns[i].data_size), src + pos, sizeof(size_t));
         pos += sizeof(size_t);
         dest->columns[i].data = malloc(dest->columns[i].data_size);
-        memcpy((dest->columns[i].data), src + pos, dest->columns[i].data_size);
+        memcpy(dest->columns[i].data, src + pos, dest->columns[i].data_size);
         pos += dest->columns[i].data_size;
     }
 }
