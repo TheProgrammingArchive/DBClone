@@ -56,6 +56,11 @@ void deserialize_row(Row* dest, void* src){
     for (int i = 0; i < dest->column_count; i++){
         memcpy(&(dest->columns[i].data), src + pos, sizeof(DataType));
         pos += sizeof(DataType);
+        memcpy(&(dest->columns[i].data_size), src + pos, sizeof(size_t));
+        pos += sizeof(size_t);
+        dest->columns[i].data = malloc(dest->columns[i].data_size);
+        memcpy((dest->columns[i].data), src + pos, dest->columns[i].data_size);
+        pos += dest->columns[i].data_size;
     }
 }
 
@@ -94,7 +99,7 @@ int main(){
     Row test;
     deserialize_row(&test, dest);
 
-    printf("%d", test.column_count);
+    printf("%s", (char*)test.columns[2].data);
 
     free_data(&new_row);
     free(dest);
