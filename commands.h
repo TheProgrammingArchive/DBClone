@@ -11,4 +11,15 @@ typedef enum{
     STATEMENT_SELECT
 } StatementType;
 
+typedef enum{
+    PREPARE_SUCCESS,
+    PREPARE_UNRECOGNIZED_STATEMENT,
+    PREPARE_SYNTAX_ERROR
+} PrepareResult;
+
+typedef enum{
+    EXECUTE_SUCCESS,
+    EXECUTE_FAILURE
+} ExecuteResult;
+
 #endif
