@@ -17,6 +17,12 @@ const int rows_per_page = PAGE_SIZE/ROW_SIZE;
 const int TABLE_MAX_ROWS = rows_per_page*TABLE_MAX_PAGES;
 
 typedef struct{
+    int file_descriptor;
+    size_t file_length;
+    void* pages[TABLE_MAX_PAGES]; // Page cache
+} Pager;
+
+typedef struct{
     int id;
     char username[COL_USRNM_SIZE + 1];
     char email[COL_EML_SIZE + 1];
@@ -24,7 +30,7 @@ typedef struct{
 
 typedef struct{
     int rows;
-    void* pages[TABLE_MAX_PAGES];
+    Pager* pager; 
 } Table;
 
 
