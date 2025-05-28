@@ -143,6 +143,12 @@ PrepareResult prepare_result(InputBuffer* buffer, Statement* statement){
         if (id == NULL || username == NULL || email == NULL)
             return PREPARE_SYNTAX_ERROR;
 
+        if (atoi(id) < 0)
+            return PREPARE_ILLEGAL_FORMAT;
+
+        if (strlen(username) > USERNAME_SIZE || strlen(email) > EMAIL_SIZE)
+            return PREPARE_ILLEGAL_FORMAT;
+
         row_to_insert.id = atoi(id);    
         strcpy(row_to_insert.username, username);
         strcpy(row_to_insert.email, email);
@@ -191,6 +197,9 @@ int main(){
                     continue;
                 case PREPARE_SYNTAX_ERROR:
                     printf("Syntax Error\n");
+                    continue;
+                case PREPARE_ILLEGAL_FORMAT:
+                    printf("Illegal format (String too long)\n");
                     continue;
             }
 
