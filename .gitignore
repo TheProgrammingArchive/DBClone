@@ -2,3 +2,8 @@
 main
 test
 test.db
+btree/CMakeFiles
+btree/CMakeLists.txt
+btree/Makefile
+btree/CMakeCache.txt
+btree/cmake_install.cmake
