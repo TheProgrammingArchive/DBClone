@@ -93,7 +93,7 @@ void split_insert_into_leaf(Btree* btree, Node* node_to_split, int key, char* va
 
     // Prepare to split
     int new_node_copy_start = (btree->order % 2 == 0) ? (btree->order/2) : (btree->order/2 + 1);
-    node_to_split->cell_count = btree->order - new_node_copy_start + 1;
+    node_to_split->cell_count = new_node_copy_start;
     for (int i = new_node_copy_start; i < btree->order; i++){
         new_node->kv_pairs[i - new_node_copy_start] = temporary[i];
         new_node->cell_count += 1;
