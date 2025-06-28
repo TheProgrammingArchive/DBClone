@@ -57,9 +57,10 @@ void insert_into_leaf(Btree* btree, Node* ins_leaf_node, int key, char* value){
             }
         }
 
-        for (int i = ins_leaf_node->cell_count + 1; i > insertion_point; i--){
+        for (int i = ins_leaf_node->cell_count; i > insertion_point; i--){
             kv_pairs[i] = kv_pairs[i - 1];
         }
+
         kv_pairs[insertion_point].key = key;
         kv_pairs[insertion_point].value = value;
         ins_leaf_node->cell_count += 1;
@@ -107,6 +108,7 @@ void split_insert_into_leaf(Btree* btree, Node* node_to_split, int key, char* va
     new_node->parent = parent;
     node_to_split->parent = parent;
 
+    parent->cell_count += 1;
     insert_into_internal(btree, parent, temporary[new_node_copy_start - 1].key, new_node);
 }
 
@@ -146,12 +148,3 @@ void insert(Btree* btree, int key, char* value){
     insert_into_leaf(btree, ins_leaf, key, value);
 }
 
-int main(){
-    Btree tree;
-    tree.root = NULL;
-    tree.order = 3;
-
-    insert(&tree, 0, "hello");
-    insert(&tree, 1, "hi");
-    insert(&tree, 2, "ok");
-}
