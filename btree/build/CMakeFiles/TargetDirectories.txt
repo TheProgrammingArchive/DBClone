@@ -1,0 +1,3 @@
+/home/usrccr/vs_code/DBClone/btree/build/CMakeFiles/main.dir
+/home/usrccr/vs_code/DBClone/btree/build/CMakeFiles/edit_cache.dir
+/home/usrccr/vs_code/DBClone/btree/build/CMakeFiles/rebuild_cache.dir

@@ -32,11 +32,15 @@ void insert_into_leaf(Btree* btree, Node* ins_leaf_node, int key, char* value);
 
 void insert_into_internal(Btree* btree, Node* ins_internal_node, int key, Node* assoc_child);
 
+void split_insert_into_internal(Btree* btree, Node* node_to_split, int key);
+
 void split_insert_into_leaf(Btree* btree, Node* node_to_split, int key, char* value);
 
 Node* new_root(Btree* btree, Node* left_most_child, int is_leaf);
 
 void insert(Btree* btree, int key, char* value);
+
+void mem_clear(Btree* btree, Node* node);
 
 // void split_insert_into_internal(Btree* btree, Node* node_to_split, int key);
 

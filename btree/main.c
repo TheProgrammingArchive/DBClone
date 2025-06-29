@@ -6,7 +6,10 @@ int main(){
     tree.root = NULL;
     tree.order = 3;
 
-    insert(&tree, 0, "hello");
-    insert(&tree, 1, "hi");
-    insert(&tree, 2, "yo mama");
+    insert(&tree, 5, "hello");
+    insert(&tree, 12, "hi");
+    insert(&tree, 1, "yo mama");
+    insert(&tree, 2, "d");
+
+    //mem_clear(&tree, tree.root);
 }

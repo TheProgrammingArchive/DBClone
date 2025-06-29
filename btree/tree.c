@@ -21,7 +21,7 @@ Node* find_leaf_to_insert(Btree* btree, Node* curr, int key){
     if (curr->node_type == NODE_INTERNAL){
         Pair* kv_pairs = curr->kv_pairs;
         int left = 0;
-        int right = curr->cell_count - 1;
+        int right = curr->cell_count - 2;
 
         if (key < kv_pairs[0].key)
             return find_leaf_to_insert(btree, curr->left_most_child, key);
@@ -74,6 +74,7 @@ void split_insert_into_leaf(Btree* btree, Node* node_to_split, int key, char* va
     new_node->cell_count = 0; 
     new_node->is_root = 0;
     new_node->node_type = NODE_LEAF;
+    node_to_split->node_type = NODE_LEAF;
     new_node->left_most_child = NULL;
     new_node->kv_pairs = (Pair*)malloc(sizeof(Pair)*(btree->order - 1));
 
@@ -102,40 +103,47 @@ void split_insert_into_leaf(Btree* btree, Node* node_to_split, int key, char* va
     for (int i = 0; i < new_node_copy_start; i++)
         node_to_split->kv_pairs[i] = temporary[i];
 
-    if (!parent)
+    if (!parent){
         parent = new_root(btree, node_to_split, 0);
+        parent->cell_count += 1;
+    }
 
     new_node->parent = parent;
     node_to_split->parent = parent;
 
-    parent->cell_count += 1;
     insert_into_internal(btree, parent, temporary[new_node_copy_start - 1].key, new_node);
 }
 
+void split_insert_into_internal(Btree* btree, Node* node_to_split, int carry_key){
+    Node* parent = node_to_split->parent;
+
+    Node* new_node = (Node*)malloc(sizeof(Node)*(btree->order - 1));
+}
+
 void insert_into_internal(Btree* btree, Node* ins_internal_node, int key, Node* assoc_child){
-    if (ins_internal_node->cell_count == btree->order - 1){
+    if (ins_internal_node->cell_count == btree->order){
         // Splitting
     }
 
     Pair* kv_pairs = ins_internal_node->kv_pairs;
 
-    if (ins_internal_node->cell_count == 0){
+    if (ins_internal_node->cell_count == 1){
         ins_internal_node->kv_pairs[0].key = key;
         ins_internal_node->kv_pairs[0].assoc_child = assoc_child;
         ins_internal_node->cell_count += 1;
         return;
     }
 
-    int insertion_point = ins_internal_node->cell_count;
+    int insertion_point = ins_internal_node->cell_count - 1;
 
-    for (int i = 0; i < ins_internal_node->cell_count; i++){
+    for (int i = 0; i < ins_internal_node->cell_count - 1; i++){
         if (kv_pairs[i].key > key){
             insertion_point = i;
             break;
         }
     }
 
-    for (int i = ins_internal_node->cell_count + 1; i > insertion_point; i--){
+    for (int i = ins_internal_node->cell_count - 1; i > insertion_point; i--){
         kv_pairs[i] = kv_pairs[i - 1];
     }
     kv_pairs[insertion_point].key = key;
@@ -146,5 +154,32 @@ void insert_into_internal(Btree* btree, Node* ins_internal_node, int key, Node* 
 void insert(Btree* btree, int key, char* value){
     Node* ins_leaf = find_leaf_to_insert(btree, btree->root, key);
     insert_into_leaf(btree, ins_leaf, key, value);
+}
+
+void mem_clear(Btree* btree, Node* node){
+    if (!node)
+        return;
+
+    if (node->node_type == NODE_LEAF){
+        free(node->kv_pairs);
+        free(node);
+    }
+
+    else{
+        Pair* kv_pairs = node->kv_pairs;
+        int pairs_avail = node->cell_count - 1;
+
+        for (int i = 0; i < pairs_avail; i++){
+            if (node->left_most_child)    
+                mem_clear(btree, node->left_most_child);
+            else
+                mem_clear(btree, node->kv_pairs[i].assoc_child);
+        }
+
+        // if (!node->kv_pairs)
+        //     free(node->kv_pairs);
+        // if (node)
+        //     free(node);
+    }
 }
 
