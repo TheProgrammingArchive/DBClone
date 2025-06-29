@@ -14,7 +14,7 @@ typedef struct Pair{
 
 typedef struct Node{
     struct Node* parent; // NULL for root
-    int cell_count, is_root;
+    int cell_count, is_root; // cell_count is +1 of kvpair size for internal, as left_most_child is counted too
     NodeType node_type;
 
     Pair* kv_pairs;
@@ -32,7 +32,7 @@ void insert_into_leaf(Btree* btree, Node* ins_leaf_node, int key, char* value);
 
 void insert_into_internal(Btree* btree, Node* ins_internal_node, int key, Node* assoc_child);
 
-void split_insert_into_internal(Btree* btree, Node* node_to_split, int key);
+void split_insert_into_internal(Btree* btree, Node* node_to_split, int carry_key, Node* associated_child);
 
 void split_insert_into_leaf(Btree* btree, Node* node_to_split, int key, char* value);
 

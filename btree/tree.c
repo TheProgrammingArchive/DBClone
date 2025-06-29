@@ -88,6 +88,7 @@ void split_insert_into_leaf(Btree* btree, Node* node_to_split, int key, char* va
     }
     temporary[i].key = key;
     temporary[i].value = value;
+    temporary[i].assoc_child = NULL;
     while (i < node_to_split->cell_count){
         temporary[i + 1] = node_to_split->kv_pairs[i];
         i++;
@@ -114,22 +115,57 @@ void split_insert_into_leaf(Btree* btree, Node* node_to_split, int key, char* va
     insert_into_internal(btree, parent, temporary[new_node_copy_start - 1].key, new_node);
 }
 
-void split_insert_into_internal(Btree* btree, Node* node_to_split, int carry_key){
+void split_insert_into_internal(Btree* btree, Node* node_to_split, int carry_key, Node* associated_child){
     Node* parent = node_to_split->parent;
 
     Pair temporary[btree->order];
+    int new_key = carry_key;
+
+    int i = 0;
+    while (i < node_to_split->cell_count - 1 && node_to_split->kv_pairs[i].key < new_key){
+        temporary[i] = node_to_split->kv_pairs[i];
+        i++;
+    }
+    temporary[i].key = carry_key;
+    temporary[i].assoc_child = associated_child;
+    temporary[i].value = NULL;
+    while (i < node_to_split->cell_count - 1){
+        temporary[i + 1] = node_to_split->kv_pairs[i];
+        i++;
+    }
+
+    //Prepare to split
+    int new_node_copy_start = (btree->order % 2 == 0) ? (btree->order/2) : (btree->order/2 + 1);
+    node_to_split->cell_count = new_node_copy_start;
 
     Node* new_node = (Node*)malloc(sizeof(Node));
-    new_node->cell_count = 0; 
+    new_node->cell_count = 1; 
     new_node->is_root = 0;
     new_node->node_type = NODE_INTERNAL;
-    new_node->left_most_child = NULL;
+    new_node->left_most_child = node_to_split->kv_pairs[new_node_copy_start - 1].assoc_child;
     new_node->kv_pairs = (Pair*)malloc(sizeof(Pair)*(btree->order - 1));
+
+    for (int i = new_node_copy_start; i < btree->order; i++){
+        new_node->kv_pairs[i - new_node_copy_start] = temporary[i];
+        new_node->cell_count += 1;
+    }
+    for (int i = 0; i < new_node_copy_start - 1; i++)
+        node_to_split->kv_pairs[i] = temporary[i];
+
+    if (!parent){
+        parent = new_root(btree, node_to_split, 0);
+        parent->cell_count += 1;
+    }
+
+    new_node->parent = parent;
+    node_to_split->parent = parent;
+    insert_into_internal(btree, parent, temporary[new_node_copy_start - 1].key, new_node);
 }
 
 void insert_into_internal(Btree* btree, Node* ins_internal_node, int key, Node* assoc_child){
     if (ins_internal_node->cell_count == btree->order){
-        // Splitting
+        split_insert_into_internal(btree, ins_internal_node, key, assoc_child);
+        return;
     }
 
     Pair* kv_pairs = ins_internal_node->kv_pairs;
@@ -165,7 +201,7 @@ void insert(Btree* btree, int key, char* value){
 
 void mem_clear(Btree* btree, Node* node){
     if (node->node_type == NODE_LEAF){
-        // Pair* kv_pairs = node->kv_pairs;
+        Pair* kv_pairs = node->kv_pairs;
         // for (int i = 0; i < node->cell_count; i++)
         //     printf("LEAF %d ", kv_pairs[i].key);
         // printf("\n");
@@ -178,14 +214,14 @@ void mem_clear(Btree* btree, Node* node){
     else{
         int pairs_avail = node->cell_count - 1;
 
+        // for (int i = 0; i < pairs_avail; i++)
+        //     printf("INT %d ", node->kv_pairs[i].key);
+        // printf("\n");
+
         mem_clear(btree, node->left_most_child);
         for (int i = 0; i < pairs_avail; i++){
             mem_clear(btree, node->kv_pairs[i].assoc_child);
         }
-
-        // for (int i = 0; i < pairs_avail; i++)
-        //     printf("INT %d ", node->kv_pairs[i].key);
-        // printf("\n");
 
         if (node->kv_pairs)
             free(node->kv_pairs);
