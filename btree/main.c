@@ -11,5 +11,5 @@ int main(){
     insert(&tree, 1, "yo mama");
     insert(&tree, 2, "d");
 
-    //mem_clear(&tree, tree.root);
+    mem_clear(&tree, tree.root);
 }

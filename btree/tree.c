@@ -117,7 +117,14 @@ void split_insert_into_leaf(Btree* btree, Node* node_to_split, int key, char* va
 void split_insert_into_internal(Btree* btree, Node* node_to_split, int carry_key){
     Node* parent = node_to_split->parent;
 
-    Node* new_node = (Node*)malloc(sizeof(Node)*(btree->order - 1));
+    Pair temporary[btree->order];
+
+    Node* new_node = (Node*)malloc(sizeof(Node));
+    new_node->cell_count = 0; 
+    new_node->is_root = 0;
+    new_node->node_type = NODE_INTERNAL;
+    new_node->left_most_child = NULL;
+    new_node->kv_pairs = (Pair*)malloc(sizeof(Pair)*(btree->order - 1));
 }
 
 void insert_into_internal(Btree* btree, Node* ins_internal_node, int key, Node* assoc_child){
@@ -157,29 +164,32 @@ void insert(Btree* btree, int key, char* value){
 }
 
 void mem_clear(Btree* btree, Node* node){
-    if (!node)
-        return;
-
     if (node->node_type == NODE_LEAF){
-        free(node->kv_pairs);
-        free(node);
+        // Pair* kv_pairs = node->kv_pairs;
+        // for (int i = 0; i < node->cell_count; i++)
+        //     printf("LEAF %d ", kv_pairs[i].key);
+        // printf("\n");
+        
+        if (node->kv_pairs){
+            free(node->kv_pairs);
+            free(node);
+        }
     }
-
     else{
-        Pair* kv_pairs = node->kv_pairs;
         int pairs_avail = node->cell_count - 1;
 
+        mem_clear(btree, node->left_most_child);
         for (int i = 0; i < pairs_avail; i++){
-            if (node->left_most_child)    
-                mem_clear(btree, node->left_most_child);
-            else
-                mem_clear(btree, node->kv_pairs[i].assoc_child);
+            mem_clear(btree, node->kv_pairs[i].assoc_child);
         }
 
-        // if (!node->kv_pairs)
-        //     free(node->kv_pairs);
-        // if (node)
-        //     free(node);
+        // for (int i = 0; i < pairs_avail; i++)
+        //     printf("INT %d ", node->kv_pairs[i].key);
+        // printf("\n");
+
+        if (node->kv_pairs)
+            free(node->kv_pairs);
+        free(node);
     }
 }
 
