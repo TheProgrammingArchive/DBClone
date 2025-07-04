@@ -1,6 +1,5 @@
 .vscode
-main
-test
-test.db
+
+src/build
 btree/build
 
