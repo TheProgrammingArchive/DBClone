@@ -12,6 +12,8 @@ int main(){
     insert(&tree, 2, "d");
     insert(&tree, 18, "erer");
     insert(&tree, 21, "test");
+    insert(&tree, 22, "fortnite");
+    insert(&tree, 0, "trial");
 
     //printf("%d ", tree.root->left_most_child->cell_count);
     mem_clear(&tree, tree.root);

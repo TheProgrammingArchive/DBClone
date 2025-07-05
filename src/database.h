@@ -21,6 +21,8 @@ typedef struct{
     size_t row_size;
 } Table;
 
+size_t row_size(Row* row, int column_count);
+
 void serialize_row(Row* row, int column_count, void* dest);
 
 void deserialize_row(Row* row, int column_count, void* src);
