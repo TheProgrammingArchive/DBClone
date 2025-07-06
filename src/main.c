@@ -4,13 +4,7 @@
 #include "string.h"
 
 int main(){
-    Table new_table;
-    new_table.column_count = 3;
-    new_table.column_descriptor = (DataType*)malloc(sizeof(DataType)*3);
-
-    new_table.column_descriptor[0] = DB3_INT;
-    new_table.column_descriptor[1] = DB3_FLOAT;
-    new_table.column_descriptor[2] = DB3_STRING;
+    DataType cd[3] = {0, 1, 2};
 
     Row new_row;
     new_row.columns = (Column*)malloc(sizeof(Column)*3);
@@ -33,23 +27,17 @@ int main(){
     new_row.columns[2].data = malloc(new_row.columns[2].data_size);
     strcpy((char*)new_row.columns[2].data, test);
 
-    void* dest = malloc(4096);
-    serialize_row(&new_row, 3, dest);
-
-    Row final;
-    deserialize_row(&final, 3, dest);
-
-    printf("%s ", (char*)final.columns[2].data);
-
-    // free
-    free(dest);
-    free(new_table.column_descriptor);
+    Cursor* cursor = start_connection("database.db", 3, cd, row_size(&new_row, 3));
     
-    for (int i = 0; i < new_table.column_count; i++){
-        free(final.columns[i].data);
-        free(new_row.columns[i].data); 
-    }
+    close_connection(cursor);
 
+    // void* dest = malloc(4096);
+    // serialize_row(&new_row, 3, dest);
+
+    // Row final;
+    // deserialize_row(&final, 3, dest);
+
+    for (int i = 0; i < 3; i++)
+        free(new_row.columns[i].data);
     free(new_row.columns);
-    free(final.columns);
 }
