@@ -2,6 +2,34 @@
 #include <stdlib.h>
 #include "database.h"
 #include "string.h"
+#include "btree.h"
+
+void write_preprocess_metadata(int row_size, DataType* column_metadata, int num_cols){
+    FILE* fd = fopen("data.emb", "w");
+    if (fd == NULL)
+        exit(EXIT_FAILURE);
+
+    fwrite(&row_size, sizeof(int), 1, fd);
+    fwrite(&num_cols, sizeof(int), 1, fd);
+    fwrite(column_metadata, sizeof(DataType), num_cols, fd);
+    fclose(fd);
+}
+
+void get_row_data(){
+    FILE* fd = fopen("data.emb", "r");
+
+    int row_size, num_cols;
+    fread(&row_size, sizeof(int), 1, fd);
+    fread(&num_cols, sizeof(int), 1, fd);
+    DataType mtd[num_cols];
+    fread(mtd, sizeof(DataType), num_cols, fd);
+
+    printf("Row_size: %d, Columns: %d", row_size, num_cols);
+    for (int i = 0; i < num_cols; i++)
+        printf(" %d", mtd[i]);
+
+    fclose(fd);
+}
 
 int main(){
     DataType cd[3] = {0, 1, 2};
@@ -31,13 +59,26 @@ int main(){
     
     close_connection(cursor);
 
-    // void* dest = malloc(4096);
-    // serialize_row(&new_row, 3, dest);
+    void* dest = malloc(4096);
+    serialize_row(&new_row, 3, dest);
+    strcpy((char*)new_row.columns[2].data, "whendeez");
+    serialize_row(&new_row, 3, dest + row_size(&new_row, 3));
 
-    // Row final;
-    // deserialize_row(&final, 3, dest);
+    Row final;
+    deserialize_row(&final, 3, dest);
 
-    for (int i = 0; i < 3; i++)
+    printf("%s ", (char*)final.columns[2].data);
+
+    write_preprocess_metadata(row_size(&new_row, 3), cd, 3);
+    get_row_data();
+
+    // Free
+    for (int i = 0; i < 3; i++){
         free(new_row.columns[i].data);
+        free(final.columns[i].data);
+    }
+
     free(new_row.columns);
+    free(final.columns);
+    free(dest);
 }

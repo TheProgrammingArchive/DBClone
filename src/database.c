@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include "database.h"
+#include "btree.h"
 
 
 // Row Operations
