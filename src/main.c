@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include "database.h"
 #include "string.h"
-#include "btree.h"
 
 void write_preprocess_metadata(int row_size, DataType* column_metadata, int num_cols){
     FILE* fd = fopen("data.emb", "w");

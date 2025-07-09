@@ -93,7 +93,7 @@ void pager_flush(Pager* pager, int page_num){
     if (advance == -1)
         exit(EXIT_FAILURE);
 
-    size_t bytes_written = write(pager->file_descriptor, pager->pages[page_num], PAGE_SIZE);
+    ssize_t bytes_written = write(pager->file_descriptor, pager->pages[page_num], PAGE_SIZE);
     if (bytes_written == -1)    
         exit(EXIT_FAILURE);
 }
@@ -139,8 +139,10 @@ void close_connection(Cursor* cursor){
     int cls = close(pager->file_descriptor);
     if (cls == -1)
         exit(EXIT_FAILURE);
-    for (int i = 0; i < pager->num_pages; i++)
+    for (int i = 0; i < pager->num_pages; i++){
+        pager_flush(pager, i);
         free(pager->pages[i]);
+    }
 
     free(pager);
     free(table);
@@ -149,8 +151,6 @@ void close_connection(Cursor* cursor){
 
 // Btree
 
-// Header constants
-const int key_size = sizeof(int);
 // Common constants
 const int is_root_size = sizeof(int);
 const int is_root_offset = 0;
@@ -265,4 +265,40 @@ void* get_assoc_ptr(void* page, int cell_num, int row_size){
 
     void* key_loc = get_key(page, cell_num, row_size);
     return key_loc + sizeof(int);
+}
+
+// Node handlers
+void init_root(Cursor* cursor, bool is_leaf){
+    Pager* pager = cursor->table->pager;
+    void* new_alloc_loc = get_page(pager, pager->num_pages);
+
+    memcpy(new_alloc_loc, get_page(pager, 0), PAGE_SIZE);
+    set_is_root(new_alloc_loc, 0);
+    set_parent_pointer(new_alloc_loc, 0);
+
+    pager->num_pages += 1;
+    
+    void* new_root = get_page(pager, 0);
+    memset(new_root, 0, PAGE_SIZE);
+    
+    set_is_root(new_root, 1);
+    set_node_type(new_root, (is_leaf) ? NODE_LEAF : NODE_INTERNAL);
+    set_parent_pointer(new_root, -1);
+
+    if (is_leaf)
+        set_num_cells(new_root, 0);
+
+    else{
+        set_num_keys(new_root, 0);
+        set_left_most_child_poiner(new_root, pager->num_pages - 1);
+    }
+    cursor->page_num = 0;
+    cursor->cell_num = 0;
+}
+
+void* find_leaf_to_insert(Cursor* cursor, int key, int curr_page_num){
+    void* curr_page = get_page(cursor->table->pager, curr_page_num);
+    if (node_type(curr_page) == NODE_INTERNAL){
+        
+    }
 }

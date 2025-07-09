@@ -4,6 +4,7 @@
 #define PAGE_SIZE 4096
 #include "objects.h"
 #include <stdlib.h>
+#include <stdbool.h>
 
 // Related to Pager and Table
 
@@ -90,5 +91,8 @@ void set_left_most_child_poiner(void* page, int left_most_child_page);
 void* get_key(void* page, int cell_num, int row_size);
 void* get_assoc_row(void* page, int cell_num, int row_size);
 void* get_assoc_ptr(void* page, int cell_num, int row_size);
+
+// Node handlers
+void init_root(Cursor* cursor, int start_key, bool is_leaf);
 
 #endif
