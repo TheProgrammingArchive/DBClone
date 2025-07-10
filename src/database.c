@@ -299,6 +299,7 @@ void init_root(Cursor* cursor, bool is_leaf){
     cursor->cell_num = 0;
 }
 
+// Returns page as well as the index at which the new pair is to be inserted
 void* find_leaf_to_insert(Cursor* cursor, int key, int curr_page_num, int row_size){
     void* curr_page = get_page(cursor->table->pager, curr_page_num);
     if (node_type(curr_page) == NODE_INTERNAL){
@@ -316,15 +317,33 @@ void* find_leaf_to_insert(Cursor* cursor, int key, int curr_page_num, int row_si
                 nearest_smallest_pos = mid;
             }
             else{
-                printf("DUPLICATED KEY");
+                fprintf(stderr, "DUPLICATE KEY");
                 exit(EXIT_FAILURE);
             }
         }
         return find_leaf_to_insert(cursor, key, *(int*)get_key(curr_page, nearest_smallest_pos, row_size), row_size);
     }
+    cursor->page_num = curr_page_num;
+
+    int idx_to_insert = num_cells(curr_page);
+    int left = 0, right = num_cells(curr_page) - 1;
+    while (left <= right){
+        int mid = (left + right) / 2;
+        if (get_key(curr_page, mid, row_size) > key){
+            idx_to_insert = mid;
+            right = mid - 1;
+        }
+        else if (get_key(curr_page, mid, row_size) < key)
+            left = mid + 1;
+        else
+            fprintf(stderr, "DUPLICATE KEY");
+    }
+    cursor->cell_num = idx_to_insert;
     return curr_page;
 }
 
 void insert_into_leaf(void* page, int key, Row* value){
-    
+    if (num_cells(page) == 10){
+
+    }
 }
