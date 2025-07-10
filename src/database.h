@@ -84,8 +84,8 @@ void set_num_cells(void* page, int num_cells);
 int num_keys(void* page);
 void set_num_keys(void* page, int num_keys);
 
-void* left_most_child_pointer(void* page);
-void set_left_most_child_poiner(void* page, int left_most_child_page);
+void* left_most_child(void* page);
+void set_left_most_child(void* page, int left_most_child_page);
 
 // KVC pairs
 void* get_key(void* page, int cell_num, int row_size);
@@ -93,6 +93,9 @@ void* get_assoc_row(void* page, int cell_num, int row_size);
 void* get_assoc_ptr(void* page, int cell_num, int row_size);
 
 // Node handlers
-void init_root(Cursor* cursor, int start_key, bool is_leaf);
+void init_root(Cursor* cursor, bool is_leaf);
+void* find_leaf_to_insert(Cursor* cursor, int key, int curr_page_num, int row_size);
+void insert(int key, Row* value);
+void insert_into_leaf(void* page, int key, Row* value);
 
 #endif

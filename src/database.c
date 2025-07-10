@@ -125,6 +125,9 @@ Cursor* start_connection(const char* fname, int column_count, DataType* column_d
     table->root_page_num = 0;
     table->row_size = row_size;
 
+    if (table->pager->num_pages == 0)
+        init_root(cursor, true);
+
     cursor->table = table;
     cursor->page_num = 0;
     cursor->cell_num = 0;
@@ -218,11 +221,11 @@ void set_num_keys(void* page, int num_keys){
     *(int*)(page + num_keys_offset) = num_keys;
 }
 
-void* left_most_child_pointer(void* page){
+void* left_most_child(void* page){
     return (page + left_most_child_page_offset);
 }
 
-void set_left_most_child_poiner(void* page, int left_most_child_page){
+void set_left_most_child(void* page, int left_most_child_page){
     *(int*)(page + left_most_child_page_offset) = left_most_child_page;
 }
 
@@ -296,9 +299,32 @@ void init_root(Cursor* cursor, bool is_leaf){
     cursor->cell_num = 0;
 }
 
-void* find_leaf_to_insert(Cursor* cursor, int key, int curr_page_num){
+void* find_leaf_to_insert(Cursor* cursor, int key, int curr_page_num, int row_size){
     void* curr_page = get_page(cursor->table->pager, curr_page_num);
     if (node_type(curr_page) == NODE_INTERNAL){
+        int left = 0, right = num_cells(curr_page);
+        if (key < *(int*)get_key(curr_page, 0, row_size))
+            return find_leaf_to_insert(cursor, key, *(int*)left_most_child(curr_page), row_size);
         
+        int nearest_smallest_pos = 0;
+        while (left <= right){
+            int mid = (left + right) / 2;
+            if (*(int*)get_key(curr_page, mid, row_size) > key)
+                right = mid - 1;
+            else if (*(int*)get_key(curr_page, mid, row_size) < key){
+                left = mid + 1;
+                nearest_smallest_pos = mid;
+            }
+            else{
+                printf("DUPLICATED KEY");
+                exit(EXIT_FAILURE);
+            }
+        }
+        return find_leaf_to_insert(cursor, key, *(int*)get_key(curr_page, nearest_smallest_pos, row_size), row_size);
     }
+    return curr_page;
+}
+
+void insert_into_leaf(void* page, int key, Row* value){
+    
 }
