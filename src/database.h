@@ -42,7 +42,7 @@ void deserialize_row(Row* row, int column_count, void* src);
 // File operations
 Pager* pager_open(const char* fname);
 
-void pager_flush(Pager* pager, int page_num);
+bool pager_flush(Pager* pager, int page_num);
 
 void* get_page(Pager* pager, int page_num);
 
@@ -89,13 +89,12 @@ void set_left_most_child(void* page, int left_most_child_page);
 
 // KVC pairs
 void* get_key(void* page, int cell_num, int row_size);
-void* get_assoc_row(void* page, int cell_num, int row_size);
-void* get_assoc_ptr(void* page, int cell_num, int row_size);
+void set_key(void* page, int cell_num, int row_size, int key);
 
 // Node handlers
 void init_root(Cursor* cursor, bool is_leaf);
-void* find_leaf_to_insert(Cursor* cursor, int key, int curr_page_num, int row_size);
-void insert(int key, Row* value);
-void insert_into_leaf(void* page, int key, Row* value);
+void* find_leaf_to_insert(Cursor* cursor, int key, int curr_page_num);
+void insert(Cursor* cursor, int key, Row* value);
+void insert_into_leaf(Cursor* cursor, void* page, int key, Row* value);
 
 #endif

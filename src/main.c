@@ -54,22 +54,29 @@ int main(){
     new_row.columns[2].data = malloc(new_row.columns[2].data_size);
     strcpy((char*)new_row.columns[2].data, test);
 
+    // Test
+
     Cursor* cursor = start_connection("database.db", 3, cd, row_size(&new_row, 3));
+
+    void* testr = get_page(cursor->table->pager, 0);
+    // insert(cursor, 1, &new_row);
+    Row final;
+    deserialize_row(&final, 3, get_key(testr, 0, row_size(&new_row, 3)) + sizeof(int));
     
     close_connection(cursor);
 
-    void* dest = malloc(4096);
-    serialize_row(&new_row, 3, dest);
-    strcpy((char*)new_row.columns[2].data, "whendeez");
-    serialize_row(&new_row, 3, dest + row_size(&new_row, 3));
+    // void* dest = malloc(4096);
+    // serialize_row(&new_row, 3, dest);
+    // strcpy((char*)new_row.columns[2].data, "whendeez");
+    // serialize_row(&new_row, 3, dest + row_size(&new_row, 3));
 
-    Row final;
-    deserialize_row(&final, 3, dest);
+    // Row final;
+    // deserialize_row(&final, 3, dest);
 
-    printf("%s ", (char*)final.columns[2].data);
+    // printf("%s ", (char*)final.columns[2].data);
 
-    write_preprocess_metadata(row_size(&new_row, 3), cd, 3);
-    get_row_data();
+    // write_preprocess_metadata(row_size(&new_row, 3), cd, 3);
+    // get_row_data();
 
     // Free
     for (int i = 0; i < 3; i++){
@@ -79,5 +86,5 @@ int main(){
 
     free(new_row.columns);
     free(final.columns);
-    free(dest);
+    // free(dest);
 }
