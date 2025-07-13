@@ -59,9 +59,10 @@ int main(){
     Cursor* cursor = start_connection("database.db", 3, cd, row_size(&new_row, 3));
 
     void* testr = get_page(cursor->table->pager, 0);
-    // insert(cursor, 1, &new_row);
+    
+    
     Row final;
-    deserialize_row(&final, 3, get_key(testr, 0, row_size(&new_row, 3)) + sizeof(int));
+    deserialize_row(&final, 3, get_key(testr, 2, row_size(&new_row, 3)) + sizeof(int));
     
     close_connection(cursor);
 
@@ -81,10 +82,12 @@ int main(){
     // Free
     for (int i = 0; i < 3; i++){
         free(new_row.columns[i].data);
-        free(final.columns[i].data);
+        // if (final.columns[i].data)
+        //     free(final.columns[i].data);
     }
 
     free(new_row.columns);
-    free(final.columns);
+    // if (final.columns)
+    //     free(final.columns);
     // free(dest);
 }

@@ -65,6 +65,7 @@ typedef struct{
 } Pair;
 
 int data_space(NodeType node_type); // Space for actual data excluding metadata
+int max_nodes(NodeType node_type, int row_size);
 
 // Way to read and write to constants from file
 int is_root(void* page);
@@ -94,7 +95,12 @@ void set_key(void* page, int cell_num, int row_size, int key);
 // Node handlers
 void init_root(Cursor* cursor, bool is_leaf);
 void* find_leaf_to_insert(Cursor* cursor, int key, int curr_page_num);
-void insert(Cursor* cursor, int key, Row* value);
+
 void insert_into_leaf(Cursor* cursor, void* page, int key, Row* value);
+
+void split_insert_into_leaf(Cursor* cursor, void* page_to_split, int key, Row* value, int new_alloc_page);
+
+
+void insert(Cursor* cursor, int key, Row* value);
 
 #endif
