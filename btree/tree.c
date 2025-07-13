@@ -143,10 +143,12 @@ void split_insert_into_internal(Btree* btree, Node* node_to_split, int carry_key
     new_node->is_root = 0;
     new_node->node_type = NODE_INTERNAL;
     new_node->left_most_child = node_to_split->kv_pairs[new_node_copy_start - 1].assoc_child;
+    new_node->left_most_child->parent = new_node;
     new_node->kv_pairs = (Pair*)malloc(sizeof(Pair)*(btree->order - 1));
 
     for (int i = new_node_copy_start; i < btree->order; i++){
         new_node->kv_pairs[i - new_node_copy_start] = temporary[i];
+        new_node->kv_pairs[i - new_node_copy_start].assoc_child->parent = new_node;
         new_node->cell_count += 1;
     }
     for (int i = 0; i < new_node_copy_start - 1; i++)
@@ -202,9 +204,9 @@ void insert(Btree* btree, int key, char* value){
 void mem_clear(Btree* btree, Node* node){
     if (node->node_type == NODE_LEAF){
         Pair* kv_pairs = node->kv_pairs;
-        // for (int i = 0; i < node->cell_count; i++)
-        //     printf("LEAF %d ", kv_pairs[i].key);
-        // printf("\n");
+        for (int i = 0; i < node->cell_count; i++)
+            printf("LEAF %d ", kv_pairs[i].key);
+        printf("\n");
         
         if (node->kv_pairs){
             free(node->kv_pairs);
@@ -214,9 +216,9 @@ void mem_clear(Btree* btree, Node* node){
     else{
         int pairs_avail = node->cell_count - 1;
 
-        // for (int i = 0; i < pairs_avail; i++)
-        //     printf("INT %d ", node->kv_pairs[i].key);
-        // printf("\n");
+        for (int i = 0; i < pairs_avail; i++)
+            printf("INT %d ", node->kv_pairs[i].key);
+        printf("\n");
 
         mem_clear(btree, node->left_most_child);
         for (int i = 0; i < pairs_avail; i++){
