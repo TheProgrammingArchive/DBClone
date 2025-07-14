@@ -17,11 +17,12 @@ int main(){
      insert(&tree, 10, "hello");
     insert(&tree, 24, "hi");
     // insert(&tree, 11, "yo mama");
-    // insert
     // insert(&tree, 19, "erer");
     // insert(&tree, 28, "test");
     // insert(&tree, 24, "fortnite");
     // insert(&tree, 30, "trial");
+    // for (int i = 0; i < 100; i++)
+    //     insert(&tree, i, "mog");
 
     //printf("%d ", tree.root->left_most_child->cell_count);
     mem_clear(&tree, tree.root);
