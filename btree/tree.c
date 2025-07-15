@@ -1,4 +1,5 @@
 #include "tree.h"
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -112,7 +113,7 @@ void split_insert_into_leaf(Btree* btree, Node* node_to_split, int key, char* va
     new_node->parent = parent;
     node_to_split->parent = parent;
 
-    insert_into_internal(btree, parent, temporary[new_node_copy_start].key, new_node);
+    insert_into_internal(btree, parent, temporary[new_node_copy_start - 1].key, new_node);
 }
 
 void split_insert_into_internal(Btree* btree, Node* node_to_split, int carry_key, Node* associated_child){
