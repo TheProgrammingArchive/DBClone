@@ -92,14 +92,18 @@ void set_left_most_child(void* page, int left_most_child_page);
 void* get_key(void* page, int cell_num, int row_size);
 void set_key(void* page, int cell_num, int row_size, int key);
 
+void* get_pointer(void* page, int cell_num, int row_size);
+void set_pointer(void* page, int cell_num, int row_size, int pointer);
+
 // Node handlers
 void init_root(Cursor* cursor, bool is_leaf);
 void* find_leaf_to_insert(Cursor* cursor, int key, int curr_page_num);
 
 void insert_into_leaf(Cursor* cursor, void* page, int key, Row* value);
 
-void split_insert_into_leaf(Cursor* cursor, void* page_to_split, int key, Row* value, int new_alloc_page);
+void insert_into_internal(Cursor* cursor, void* page, int key, int assoc_child_page);
 
+void split_insert_into_leaf(Cursor* cursor, void* page_to_split, int key, Row* value, int new_alloc_page);
 
 void insert(Cursor* cursor, int key, Row* value);
 

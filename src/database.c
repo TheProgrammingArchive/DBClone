@@ -184,7 +184,13 @@ int data_space(NodeType node_type){
 }
 
 int max_nodes(NodeType node_type, int row_size){
-    return data_space(node_type)/row_size;
+    switch (node_type){
+        case NODE_INTERNAL:
+            return data_space(NODE_INTERNAL)/(sizeof(int) + sizeof(int));
+
+        case NODE_LEAF:
+            return data_space(NODE_LEAF)/(sizeof(int) + row_size);
+    }
 }
 
 int is_root(void* page){
@@ -262,6 +268,16 @@ void set_key(void* page, int cell_num, int row_size, int key){
     *(int*)key_loc = key;
 }
 
+void* get_pointer(void* page, int cell_num, int row_size){
+    void* key_loc = get_key(page, cell_num, row_size);
+    return key_loc + sizeof(int);
+}
+
+void set_pointer(void* page, int cell_num, int row_size, int pointer){
+    void* ptr_loc = get_pointer(page, cell_num, row_size);
+    *(int*)ptr_loc = pointer;
+}
+
 // Node handlers
 void init_root(Cursor* cursor, bool is_leaf){
     Pager* pager = cursor->table->pager;
@@ -285,7 +301,7 @@ void init_root(Cursor* cursor, bool is_leaf){
 
     else{
         set_num_keys(new_root, 0);
-        set_left_most_child(new_root, pager->num_pages);
+        set_left_most_child(new_root, pager->num_pages - 1);
     }
     cursor->page_num = 0;
     cursor->cell_num = 0;
@@ -349,7 +365,8 @@ void* find_leaf_to_insert(Cursor* cursor, int key, int curr_page_num){
 
 void insert_into_leaf(Cursor* cursor, void* page, int key, Row* value){
     if (num_cells(page) == max_nodes(NODE_LEAF, cursor->table->row_size)){
-        //Splitting
+        printf("Ready to split");
+        return;
     }
     int idx_to_insert = cursor->cell_num;
     for (int i = num_cells(page); i > idx_to_insert; i--){
@@ -358,6 +375,39 @@ void insert_into_leaf(Cursor* cursor, void* page, int key, Row* value){
     set_key(page, idx_to_insert, cursor->table->row_size, key);
     serialize_row(value, cursor->table->column_count, get_key(page, idx_to_insert, cursor->table->row_size) + sizeof(int));
     set_num_cells(page, num_cells(page) + 1);
+}
+
+void insert_into_internal(Cursor* cursor, void* page, int key, int assoc_child_page){
+    if (num_cells(page) == max_nodes(NODE_INTERNAL, cursor->table->row_size)){
+        // Splitting
+    }
+    if (num_keys(page) == 0){
+        set_key(page, 0, cursor->table->row_size, key);
+        set_pointer(page, 0, cursor->table->row_size, assoc_child_page);
+        set_num_keys(page, 1);
+    }
+    else{
+        int left = 0, right = num_cells(page) - 1;
+        int idx_to_insert = num_cells(page);
+
+        while (left <= right){
+            int mid = (left + right) / 2;
+            int mid_key = *(int*)get_key(page, mid, cursor->table->row_size);
+            if (mid_key > key){
+                idx_to_insert = mid;
+                right = mid - 1;
+            }
+            else if (mid_key < key)
+                left = mid + 1;
+        }
+        
+        for (int i = num_cells(page); i > idx_to_insert; i--){
+            memcpy(get_key(page, i, cursor->table->row_size), get_key(page, i - 1, cursor->table->row_size), sizeof(int) + sizeof(int));
+        }
+        set_key(page, idx_to_insert, cursor->table->row_size, key);
+        set_pointer(page, idx_to_insert, cursor->table->row_size, assoc_child_page);
+        set_num_cells(page, num_cells(page) + 1);
+    }
 }
 
 void split_insert_into_leaf(Cursor* cursor, void* page_to_split, int key, Row* value, int new_alloc_page){
@@ -374,23 +424,25 @@ void split_insert_into_leaf(Cursor* cursor, void* page_to_split, int key, Row* v
     int new_key = key;
 
     int i = 0;
-    while (i < num_cells(page_to_split) - 1 && get_key(page_to_split, i, cursor->table->row_size) < new_key){
-        temporary[i] = get_key(page_to_split, i, cursor->table->row_size);
+    while (i < num_cells(page_to_split) - 1 && *(int*)get_key(page_to_split, i, cursor->table->row_size) < new_key){
+        temporary[i] = *(int*)get_key(page_to_split, i, cursor->table->row_size);
         i++;    
     }
     temporary[i] = key;
     while (i < num_cells(page_to_split)){
-        temporary[i + 1] = get_key(page_to_split, i, cursor->table->row_size);
+        temporary[i + 1] = *(int*)get_key(page_to_split, i, cursor->table->row_size);
         i++;
     }
 
-    set_num_cells(page_to_split, ceil(leaf_order/2));
-    for (int i = ceil(leaf_order/2); i < leaf_order; i++){
-        set_key(new_page, i - ceil(leaf_order/2), temporary[i], cursor->table->row_size);
-        serialize_row(value, cursor->table->column_count, get_key(new_page, i - ceil(leaf_order/2), cursor->table->row_size) + sizeof(int));
-        set_num_cells(new_page, num_cells(new_page) + 1);
+    int inp = ceil(leaf_order/2);
+
+    set_num_cells(page_to_split, inp);
+    set_num_cells(new_page, leaf_order - inp);
+    for (int i = inp; i < leaf_order; i++){
+        set_key(new_page, i - inp, temporary[i], cursor->table->row_size);
+        serialize_row(value, cursor->table->column_count, get_key(new_page, i - inp, cursor->table->row_size) + sizeof(int));
     }
-    for (int i = 0; i < ceil(leaf_order/2); i++){
+    for (int i = 0; i < inp; i++){
         set_key(page_to_split, i, temporary[i], cursor->table->row_size);
         serialize_row(value, cursor->table->column_count, get_key(page_to_split, i, cursor->table->row_size) + sizeof(int));
     }
@@ -401,7 +453,9 @@ void split_insert_into_leaf(Cursor* cursor, void* page_to_split, int key, Row* v
     parent = parent_pointer(page_to_split);
     set_parent_pointer(new_page, parent);
 
-    // insert_into_internal(cursor, parent, )
+    cursor->table->pager->num_pages += 1;
+
+    insert_into_internal(cursor, get_page(cursor->table->pager, parent), temporary[inp - 1], new_alloc_page);
 }
 
 void insert(Cursor* cursor, int key, Row* value){

@@ -49,20 +49,26 @@ int main(){
     *(float*)new_row.columns[1].data = y;
 
     new_row.columns[2].data_type = DB3_STRING;
-    new_row.columns[2].data_size = sizeof(char)*10;
-    char test[10] = "the one";
-    new_row.columns[2].data = malloc(new_row.columns[2].data_size);
+    char test[] = "the one";
+    new_row.columns[2].data_size = 10;
+    new_row.columns[2].data = calloc(10, sizeof(char));
     strcpy((char*)new_row.columns[2].data, test);
 
     // Test
 
     Cursor* cursor = start_connection("database.db", 3, cd, row_size(&new_row, 3));
 
+    // for (int i = 0; i < 70; i++){
+    //     insert(cursor, i, &new_row);
+    // }
+    insert(cursor, 70, &new_row);
+
+    // printf("%d ", max_nodes(NODE_LEAF, cursor->table->row_size));
+
     void* testr = get_page(cursor->table->pager, 0);
     
-    
     Row final;
-    deserialize_row(&final, 3, get_key(testr, 2, row_size(&new_row, 3)) + sizeof(int));
+    deserialize_row(&final, 3, get_key(testr, 0, cursor->table->row_size) + sizeof(int));
     
     close_connection(cursor);
 
