@@ -5,6 +5,11 @@
 #include "objects.h"
 #include <stdlib.h>
 #include <stdbool.h>
+#include <unistd.h>
+#include <errno.h>
+
+// Memory navigation
+void* memory_step(void* src, size_t offset);
 
 // Related to Pager and Table
 
@@ -49,7 +54,7 @@ void* get_page(Pager* pager, int page_num);
 // Database connection handlers
 Cursor* start_connection(const char* fname, int column_count, DataType* column_descriptor, size_t row_size); // Store column count and column descriptor metadata in a json file
 
-void close_connection(Cursor* cursor);
+bool close_connection(Cursor* cursor);
 
 
 // Btree 
@@ -58,14 +63,15 @@ typedef enum{
     NODE_INTERNAL
 } NodeType;
 
-typedef struct{
-    int key;
-    struct Row* assoc_row; // NULL for internal node
-    int assoc_child_page; // -1 for leaf node
-} Pair;
+typedef enum{
+    FIND_NEAREST_SMALLEST,
+    FIND_NEAREST_LARGEST,
+    FIND_EXACT
+} FindType;
 
-int data_space(NodeType node_type); // Space for actual data excluding metadata
-int max_nodes(NodeType node_type, int row_size);
+// Helpers
+size_t data_space(NodeType node_type); // Space for actual data excluding metadata
+int max_nodes(NodeType node_type, size_t row_size);
 
 // Way to read and write to constants from file
 int is_root(void* page);
@@ -89,15 +95,20 @@ void* left_most_child(void* page);
 void set_left_most_child(void* page, int left_most_child_page);
 
 // KVC pairs
-void* get_key(void* page, int cell_num, int row_size);
-void set_key(void* page, int cell_num, int row_size, int key);
+void* get_key(void* page, int cell_num, size_t row_size);
+void set_key(void* page, int cell_num, size_t row_size, int key);
 
-void* get_pointer(void* page, int cell_num, int row_size);
-void set_pointer(void* page, int cell_num, int row_size, int pointer);
+void* get_pointer(void* page, int cell_num, size_t row_size);
+void set_pointer(void* page, int cell_num, size_t row_size, int pointer);
 
-// Node handlers
-void init_root(Cursor* cursor, bool is_leaf);
-void* find_leaf_to_insert(Cursor* cursor, int key, int curr_page_num);
+// Node input handlers
+int find_free_page(Cursor* cursor);
+
+int init_root(Cursor* cursor, bool is_leaf);
+
+void* find_leaf_to_insert(Cursor* cursor, int key, int curr_page_num, bool search_exact);
+
+int bin_search(Cursor* cursor, int key, FindType find_type);
 
 void insert_into_leaf(Cursor* cursor, void* page, int key, Row* value);
 
@@ -106,5 +117,9 @@ void insert_into_internal(Cursor* cursor, void* page, int key, int assoc_child_p
 void split_insert_into_leaf(Cursor* cursor, void* page_to_split, int key, Row* value, int new_alloc_page);
 
 void insert(Cursor* cursor, int key, Row* value);
+
+// Node search handlers
+Row* search(Cursor* cursor, int key);
+
 
 #endif
